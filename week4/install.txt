@@ -1,0 +1,5 @@
+mkdir web3example  
+cd web3example
+npm init -y
+npm install web3
+npm install solc@0.8.0
