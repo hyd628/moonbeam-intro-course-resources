@@ -117,6 +117,7 @@ contract DelegationDAO is AccessControl {
             require(result, "Schedule revoke delay is not finished yet.");
         }
         //Calculate the withdraw amount including staking rewards
+        require(totalStake!=0, "Cannot divide by zero.")
         uint amount = address(this)
             .balance
             .mul(memberStakes[msg.sender])
@@ -145,7 +146,7 @@ contract DelegationDAO is AccessControl {
         }
     }
 
-    // Check how much free balance the DAO currently has. It should be the staking rewards if the DAO state is anything other than REVOKED. 
+    // Check how much free balance the DAO currently has. It should be the staking rewards if the DAO state is anything other than REVOKED or COLLECTING. 
     function check_free_balance() public view onlyRole(MEMBER) returns(uint256) {
         return address(this).balance;
     }
