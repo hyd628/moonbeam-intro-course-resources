@@ -117,7 +117,7 @@ contract DelegationDAO is AccessControl {
             require(result, "Schedule revoke delay is not finished yet.");
         }
         //Calculate the withdraw amount including staking rewards
-        require(totalStake!=0, "Cannot divide by zero.")
+        require(totalStake!=0, "Cannot divide by zero.");
         uint amount = address(this)
             .balance
             .mul(memberStakes[msg.sender])
