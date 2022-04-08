@@ -10,12 +10,14 @@ import "@openzeppelin/contracts/utils/Address.sol";
 contract DelegationDAO is AccessControl {
     using SafeMath for uint256;
     
-    // Role definition for contract members (approved by admin)
+    // Role definition for contract members
     bytes32 public constant MEMBER = keccak256("MEMBER");
 
+    // Possible states for the DAO to be in
     enum daoState{ COLLECTING, STAKING, REVOKING, REVOKED }
 
-    daoState currentState; 
+    // Current state that the DAO is in
+    daoState public currentState; 
 
     // Member stakes (doesnt include rewards, represents member shares)
     mapping(address => uint256) public memberStakes;
@@ -30,7 +32,7 @@ contract DelegationDAO is AccessControl {
     // Minimum Nomination Amount
     uint256 public constant MinNominatorStk = 5 ether;
     
-    // Moonbem Staking Precompile address
+    // Moonbeam Staking Precompile address
     address public constant stakingPrecompileAddress = 0x0000000000000000000000000000000000000800;
 
     // The collator that this DAO is currently nominating
@@ -109,15 +111,10 @@ contract DelegationDAO is AccessControl {
 
     // Function for a user to withdraw their stake
     function withdraw(address payable account) public onlyRole(MEMBER) {
-        if (currentState == daoState.COLLECTING || currentState == daoState.STAKING) {
-            revert("The DAO is not in the correct state to withdraw");
-        }
-
+        require(currentState != daoState.STAKING, "The DAO is not in the correct state to withdraw.");
         if (currentState == daoState.REVOKING) {
             bool result = execute_revoke();
-            if (!result) {
-                return;
-            }
+            require(result, "Schedule revoke delay is not finished yet.");
         }
         //Calculate the withdraw amount including staking rewards
         uint amount = address(this)
@@ -132,18 +129,14 @@ contract DelegationDAO is AccessControl {
 
     // Schedule revoke, admin only
     function schedule_revoke() public onlyRole(DEFAULT_ADMIN_ROLE){
-        if (currentState != daoState.STAKING) {
-            revert("The DAO is not in the correct state to schedule a revoke.");
-        }
+        require(currentState == daoState.STAKING, "The DAO is not in the correct state to schedule a revoke.");
         staking.schedule_revoke_delegation(target);
         currentState = daoState.REVOKING;
     }
     
     // Try to execute the revoke, returns true if it succeeds, false if it doesn't
     function execute_revoke() public onlyRole(MEMBER) returns(bool) {
-        if (currentState != daoState.REVOKING) {
-            revert("The DAO is not in the correct state to execute a revoke.");
-        }
+        require(currentState != daoState.REVOKING, "The DAO is not in the correct state to execute a revoke.");
         try staking.execute_delegation_request(address(this), target) {
             currentState = daoState.REVOKED;
             return true;
@@ -153,13 +146,18 @@ contract DelegationDAO is AccessControl {
     }
 
     // Check how much free balance the DAO currently has. It should be the staking rewards if the DAO state is anything other than REVOKED. 
-    function check_free_balance() public view onlyRole(MEMBER) returns(uint256){
+    function check_free_balance() public view onlyRole(MEMBER) returns(uint256) {
         return address(this).balance;
     }
     
     // Change the collator target, admin only
-    function change_target(address newCollator) public onlyRole(DEFAULT_ADMIN_ROLE){
+    function change_target(address newCollator) public onlyRole(DEFAULT_ADMIN_ROLE) {
         target = newCollator;
+    }
+
+    function reset_dao() public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(currentState == daoState.REVOKED, "The DAO is not in the correct state to be reset.");
+        currentState = daoState.COLLECTING;
     }
 
 
