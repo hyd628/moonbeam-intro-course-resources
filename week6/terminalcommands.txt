@@ -1,3 +1,12 @@
 # Delegation DAO Repo
 https://github.com/hyd628/delegation-dao-demo
 
+# 编译和部署合约
+yarn deploy
+
+# 验证智能合约
+yarn verify --network moonbaseAlpha [合约部署地址] "constructor 参数 1" "constructor 参数 2"
+
+# 启动React服务器
+yarn start
+
