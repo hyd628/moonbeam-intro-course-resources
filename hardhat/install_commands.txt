@@ -1,0 +1,19 @@
+# 安装和初始化脚本
+
+# 创建目录
+mkdir hardhat && cd hardhat
+
+# 初始化Node.js项目
+npm init -y
+
+# 安装Hardhat
+npm install hardhat
+
+# 创建项目
+npx hardhat
+
+# 安装ethers插件
+npm install @nomiclabs/hardhat-ethers ethers
+
+# 安装OpenZeppelin依赖
+npm install @openzeppelin/contracts
