@@ -1,2 +1,2 @@
-# moonbeam-intro-course-scripts
- Moonbeam开发入门课程脚本
+# moonbeam-intro-course-resources
+ Moonbeam开发入门课程资源
